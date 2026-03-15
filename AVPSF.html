@@ -1,0 +1,772 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Video Player</title>
+
+    <link rel="icon" type="image/x-icon" href="https://cdn.discordapp.com/attachments/482366784490700810/1482603306806411346/Tony_Stank.ico?ex=69b78d6d&is=69b63bed&hm=918aa9c141eb304e81249abfa41a309635294fddf1ef9cda579ca7b4c71c5b53&">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        body.light {
+            background-color: #f5f5f5;
+            color: #000000;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .video-container {
+            margin: 20px auto;
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            transition: opacity 0.3s ease;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            background-color: #4CAF50;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button.toggle {
+            background-color: #2196F3;
+        }
+
+        button.toggle:hover {
+            background-color: #1976D2;
+        }
+
+        .volume-slider {
+            width: 100px;
+            margin: 0 10px;
+            transition: opacity 0.3s ease;
+        }
+
+        .mode-toggle {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .mode-toggle:hover {
+            background-color: #333;
+        }
+
+        .hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .input-container {
+            margin-top: 30px;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            width: 60%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button#loadButton {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        button#loadButton:hover {
+            background-color: #45a049;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            color: #333;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #333;
+            min-height: 20px;
+        }
+
+        /* Tab UI */
+        .tab-container {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #e0e0e0;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            transition: background-color 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        .tab:hover {
+            background-color: #45a049;
+        }
+
+        .tab-icon {
+            margin-right: 5px;
+            font-size: 18px;
+        }
+
+        /* Tab content */
+        .tab-content {
+            margin-top: 10px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Favorite Playlist */
+        .playlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .playlist-item button {
+            padding: 5px 10px;
+            font-size: 12px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .playlist-item button:hover {
+            background-color: #d32f2f;
+        }
+
+        .playlist-item span {
+            font-size: 14px;
+            flex-grow: 1;
+            margin-left: 10px;
+            color: #333;
+        }
+
+        .playlist-item input[type="text"] {
+            width: 60%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .add-favorite-container {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .add-favorite-container input[type="text"] {
+            width: 60%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .add-favorite-container button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .add-favorite-container button:hover {
+            background-color: #45a049;
+        }
+
+        /* Toggle for favorite visibility */
+        .favorite-toggle {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .favorite-toggle button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .favorite-toggle button:hover {
+            background-color: #1976D2;
+        }
+
+        /* Dark mode adjustments */
+        body.dark .tab {
+            background-color: #202020;
+            color: #e0e0e0;
+        }
+
+        body.dark .tab.active {
+            background-color: #388e3c;
+            color: white;
+        }
+
+        body.dark .tab-content {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        body.dark .playlist-item {
+            background-color: #202020;
+            border: 1px solid #333;
+        }
+
+        body.dark .playlist-item span,
+        body.dark .add-favorite-container input[type="text"] {
+            color: #e0e0e0;
+        }
+
+        body.dark .feedback,
+        body.dark .status {
+            color: #e0e0e0;
+        }
+
+        body.dark .mode-toggle {
+            background-color: #333;
+            color: white;
+        }
+    </style>
+</head>
+<body class="light">
+
+    <div class="container">
+        <h1>Advanced Video Player</h1>
+
+        <div class="video-container">
+            <!-- Self-hosted video -->
+            <video id="videoPlayer" controls>
+                <source src="https://video.twimg.com/ext_tw_video/2032086973146677249/pu/vid/avc1/480x590/sQ5wIboI8e-tUDws.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <div class="controls">
+            <button id="playButton">Play</button>
+            <button id="pauseButton">Pause</button>
+            <button id="resetButton">Reset</button>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" class="volume-slider">
+            <button id="hideButton" class="toggle">Hide Video</button>
+            <button id="autoPlayButton" class="toggle">Auto Play</button>
+            <button id="loopButton" class="toggle">Loop</button>
+        </div>
+
+        <button id="modeToggle" class="mode-toggle">Toggle Dark Mode</button>
+
+        <!-- Input for video URL or file path -->
+        <div class="input-container">
+            <input type="text" id="videoInput" placeholder="Enter video URL or file path">
+            <button id="loadButton">Load Video</button>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+        <div class="status" id="status"></div>
+    </div>
+
+
+    <!-- Tab Content -->
+    <div class="tab-content active" id="favorites-content">
+        <h2>Favorite Videos</h2>
+        <div id="playlist"></div>
+
+        <!-- Add favorite video -->
+        <div class="add-favorite-container">
+            <input type="text" id="favoriteInput" placeholder="Add favorite video URL or path">
+            <button id="addFavoriteButton">Add</button>
+        </div>
+    </div>
+
+    <!-- Toggle to hide/show favorite playlist -->
+    <div class="favorite-toggle">
+        <button id="toggleFavoriteButton">Hide Favorites</button>
+    </div>
+
+    <script>
+        // Get references to elements
+        const videoPlayer = document.getElementById('videoPlayer');
+        const playButton = document.getElementById('playButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const resetButton = document.getElementById('resetButton');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const hideButton = document.getElementById('hideButton');
+        const modeToggle = document.getElementById('modeToggle');
+        const videoInput = document.getElementById('videoInput');
+        const loadButton = document.getElementById('loadButton');
+        const feedback = document.getElementById('feedback');
+        const status = document.getElementById('status');
+        const autoPlayButton = document.getElementById('autoPlayButton');
+        const loopButton = document.getElementById('loopButton');
+        const favoriteInput = document.getElementById('favoriteInput');
+        const addFavoriteButton = document.getElementById('addFavoriteButton');
+        const playlist = document.getElementById('playlist');
+        const toggleFavoriteButton = document.getElementById('toggleFavoriteButton');
+        const tabButtons = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Load persistent settings from localStorage
+        function loadSettings() {
+            // Load volume
+            const volume = localStorage.getItem('volume');
+            if (volume) {
+                volumeSlider.value = volume;
+                videoPlayer.volume = volume;
+            }
+
+            // Load hide/show state
+            const hide = localStorage.getItem('hideVideo');
+            if (hide === 'true') {
+                hideButton.textContent = "Show Video";
+                document.querySelector('.video-container').classList.remove('show');
+                document.querySelector('.video-container').classList.add('hidden');
+            } else {
+                hideButton.textContent = "Hide Video";
+                document.querySelector('.video-container').classList.add('show');
+                document.querySelector('.video-container').classList.remove('hidden');
+            }
+
+            // Load theme
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.body.classList.remove('light');
+                document.body.classList.add('dark');
+                modeToggle.textContent = "Toggle Light Mode";
+            } else {
+                document.body.classList.remove('dark');
+                document.body.classList.add('light');
+                modeToggle.textContent = "Toggle Dark Mode";
+            }
+
+            // Load auto-play
+            const autoPlay = localStorage.getItem('autoPlay');
+            if (autoPlay === 'true') {
+                autoPlayButton.textContent = "Auto Play Off";
+                videoPlayer.autoplay = true;
+            } else {
+                autoPlayButton.textContent = "Auto Play On";
+                videoPlayer.autoplay = false;
+            }
+
+            // Load loop
+            const loop = localStorage.getItem('loop');
+            if (loop === 'true') {
+                loopButton.textContent = "Loop Off";
+                videoPlayer.loop = true;
+            } else {
+                loopButton.textContent = "Loop On";
+                videoPlayer.loop = false;
+            }
+
+            // Load favorite playlist
+            const favorites = localStorage.getItem('favorites');
+            if (favorites) {
+                const favoritesList = JSON.parse(favorites);
+                renderPlaylist(favoritesList);
+            } else {
+                renderPlaylist([]);
+            }
+
+            // Load favorite toggle state
+            const favoriteVisible = localStorage.getItem('favoriteVisible');
+            if (favoriteVisible === 'true') {
+                toggleFavoriteButton.textContent = "Hide Favorites";
+                document.querySelector('.tab-content#favorites-content').classList.add('show');
+                document.querySelector('.tab-content#favorites-content').classList.remove('hidden');
+            } else {
+                toggleFavoriteButton.textContent = "Show Favorites";
+                document.querySelector('.tab-content#favorites-content').classList.remove('show');
+                document.querySelector('.tab-content#favorites-content').classList.add('hidden');
+            }
+        }
+
+        // Save settings to localStorage
+        function saveSettings() {
+            localStorage.setItem('volume', volumeSlider.value);
+            localStorage.setItem('hideVideo', document.querySelector('.video-container').classList.contains('hidden'));
+            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+            localStorage.setItem('autoPlay', videoPlayer.autoplay);
+            localStorage.setItem('loop', videoPlayer.loop);
+            localStorage.setItem('favorites', JSON.stringify(favoriteList));
+            localStorage.setItem('favoriteVisible', favoriteVisible);
+        }
+
+        // Function to play video
+        function playVideo() {
+            videoPlayer.play();
+        }
+
+        // Function to pause video
+        function pauseVideo() {
+            videoPlayer.pause();
+        }
+
+        // Function to reset video to start
+        function resetVideo() {
+            videoPlayer.currentTime = 0;
+            videoPlayer.play(); // Start playing after reset
+        }
+
+        // Function to control volume
+        function setVolume() {
+            videoPlayer.volume = volumeSlider.value;
+            saveSettings(); // Save volume setting
+        }
+
+        // Function to hide/show video player
+        function toggleVideo() {
+            const videoContainer = document.querySelector('.video-container');
+            if (videoContainer.classList.contains('hidden')) {
+                videoContainer.classList.remove('hidden');
+                videoContainer.classList.add('show');
+                hideButton.textContent = "Hide Video";
+            } else {
+                videoContainer.classList.remove('show');
+                videoContainer.classList.add('hidden');
+                hideButton.textContent = "Show Video";
+            }
+            saveSettings(); // Save hide/show state
+        }
+
+        // Function to toggle auto-play
+        function toggleAutoPlay() {
+            videoPlayer.autoplay = !videoPlayer.autoplay;
+            if (videoPlayer.autoplay) {
+                autoPlayButton.textContent = "Auto Play Off";
+            } else {
+                autoPlayButton.textContent = "Auto Play On";
+            }
+            saveSettings(); // Save auto-play state
+        }
+
+        // Function to toggle loop
+        function toggleLoop() {
+            videoPlayer.loop = !videoPlayer.loop;
+            if (videoPlayer.loop) {
+                loopButton.textContent = "Loop Off";
+            } else {
+                loopButton.textContent = "Loop On";
+            }
+            saveSettings(); // Save loop state
+        }
+
+        // Function to toggle dark/light mode
+        function toggleMode() {
+            const body = document.body;
+            if (body.classList.contains('light')) {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                modeToggle.textContent = "Toggle Light Mode";
+            } else {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                modeToggle.textContent = "Toggle Dark Mode";
+            }
+            saveSettings(); // Save theme
+        }
+
+        // Function to load video from input
+        function loadVideo() {
+            const input = videoInput.value.trim();
+            if (!input) {
+                feedback.textContent = "Please enter a video URL or file path.";
+                return;
+            }
+
+            // Check if it's a valid URL or file path
+            if (input.startsWith('http') || input.startsWith('https') || input.startsWith('file://')) {
+                // For external video (e.g., YouTube, Vimeo, etc.)
+                const source = document.createElement('source');
+                source.src = input;
+                source.type = 'video/mp4'; // or adjust based on file type
+                videoPlayer.innerHTML = ''; // Clear existing source
+                videoPlayer.appendChild(source);
+                videoPlayer.load(); // Load the new source
+                videoPlayer.play(); // Auto-play after load
+                feedback.textContent = "External video loaded successfully!";
+            } else {
+                // Assume it's a local file path (e.g., `videos/demo.mp4`)
+                const source = document.createElement('source');
+                source.src = input;
+                source.type = 'video/mp4';
+                videoPlayer.innerHTML = ''; // Clear existing source
+                videoPlayer.appendChild(source);
+                videoPlayer.load(); // Load the new source
+                videoPlayer.play(); // Auto-play after load
+                feedback.textContent = "Local video loaded successfully!";
+            }
+
+            // Preserve volume and hide state
+            volumeSlider.value = videoPlayer.volume; // Use current volume
+            if (document.querySelector('.video-container').classList.contains('hidden')) {
+                document.querySelector('.video-container').classList.remove('hidden');
+                document.querySelector('.video-container').classList.add('show');
+                hideButton.textContent = "Hide Video";
+            }
+            saveSettings(); // Save current state
+        }
+
+        // Function to display current time
+        function updateStatus() {
+            const currentTime = videoPlayer.currentTime;
+            const duration = videoPlayer.duration;
+            if (isNaN(duration)) {
+                status.textContent = "Video not loaded yet.";
+            } else {
+                const minutes = Math.floor(currentTime / 60);
+                const seconds = Math.floor(currentTime % 60);
+                status.textContent = `${minutes}:${seconds} / ${Math.floor(duration / 60)}:${Math.floor(duration % 60)}`;
+            }
+        }
+
+        // Function to render favorite playlist
+        function renderPlaylist(favorites) {
+            playlist.innerHTML = '';
+            favorites.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('playlist-item');
+                itemDiv.innerHTML = `
+                    <span>${item}</span>
+                    <button onclick="loadFavorite(${index})">Play</button>
+                    <button onclick="deleteFavorite(${index})">Delete</button>
+                `;
+                playlist.appendChild(itemDiv);
+            });
+        }
+
+        // Function to load favorite video
+        function loadFavorite(index) {
+            const favorites = JSON.parse(localStorage.getItem('favorites'));
+            const videoUrl = favorites[index];
+            if (videoUrl.startsWith('http') || videoUrl.startsWith('https') || videoUrl.startsWith('file://')) {
+                const source = document.createElement('source');
+                source.src = videoUrl;
+                source.type = 'video/mp4';
+                videoPlayer.innerHTML = ''; // Clear existing source
+                videoPlayer.appendChild(source);
+                videoPlayer.load(); // Load the new source
+                videoPlayer.play(); // Auto-play after load
+                feedback.textContent = `Loaded favorite: ${videoUrl}`;
+            } else {
+                const source = document.createElement('source');
+                source.src = videoUrl;
+                source.type = 'video/mp4';
+                videoPlayer.innerHTML = ''; // Clear existing source
+                videoPlayer.appendChild(source);
+                videoPlayer.load(); // Load the new source
+                videoPlayer.play(); // Auto-play after load
+                feedback.textContent = `Loaded favorite: ${videoUrl}`;
+            }
+            // Preserve volume and hide state
+            volumeSlider.value = videoPlayer.volume;
+            if (document.querySelector('.video-container').classList.contains('hidden')) {
+                document.querySelector('.video-container').classList.remove('hidden');
+                document.querySelector('.video-container').classList.add('show');
+                hideButton.textContent = "Hide Video";
+            }
+            saveSettings();
+        }
+
+        // Function to delete favorite
+        function deleteFavorite(index) {
+            const favorites = JSON.parse(localStorage.getItem('favorites'));
+            favorites.splice(index, 1);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            renderPlaylist(favorites);
+            feedback.textContent = "Favorite removed.";
+        }
+
+        // Function to add favorite
+        function addFavorite() {
+            const input = favoriteInput.value.trim();
+            if (!input) {
+                feedback.textContent = "Please enter a video URL or file path.";
+                return;
+            }
+
+            const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            if (favorites.includes(input)) {
+                feedback.textContent = "Already in favorites.";
+                return;
+            }
+
+            favorites.push(input);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            renderPlaylist(favorites);
+            feedback.textContent = "Favorite added.";
+            favoriteInput.value = '';
+        }
+
+        // Function to toggle favorite visibility
+        function toggleFavorite() {
+            const favoriteContent = document.querySelector('.tab-content#favorites-content');
+            const favoriteVisible = localStorage.getItem('favoriteVisible');
+            if (favoriteVisible === 'true') {
+                favoriteContent.classList.remove('show');
+                favoriteContent.classList.add('hidden');
+                toggleFavoriteButton.textContent = "Show Favorites";
+                localStorage.setItem('favoriteVisible', 'false');
+            } else {
+                favoriteContent.classList.add('show');
+                favoriteContent.classList.remove('hidden');
+                toggleFavoriteButton.textContent = "Hide Favorites";
+                localStorage.setItem('favoriteVisible', 'true');
+            }
+        }
+
+        // Function to switch tabs
+        function switchTab(tabId) {
+            // Remove active class from all tabs
+            tabButtons.forEach(tab => tab.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            // Add active class to selected tab and content
+            document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+            document.querySelector(`.tab-content#${tabId}-content`).classList.add('active');
+        }
+
+        // Event listeners
+        playButton.addEventListener('click', playVideo);
+        pauseButton.addEventListener('click', pauseVideo);
+        resetButton.addEventListener('click', resetVideo);
+        volumeSlider.addEventListener('input', setVolume);
+        hideButton.addEventListener('click', toggleVideo);
+        modeToggle.addEventListener('click', toggleMode);
+        autoPlayButton.addEventListener('click', toggleAutoPlay);
+        loopButton.addEventListener('click', toggleLoop);
+        loadButton.addEventListener('click', loadVideo);
+        addFavoriteButton.addEventListener('click', addFavorite);
+        toggleFavoriteButton.addEventListener('click', toggleFavorite);
+        videoPlayer.addEventListener('timeupdate', updateStatus);
+
+        // Tab event listeners
+        tabButtons.forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchTab(tab.getAttribute('data-tab'));
+            });
+        });
+
+        // Load settings on page load
+        window.onload = loadSettings;
+    </script>
+
+</body>
+</html>
